@@ -25,13 +25,7 @@ except ImportError:
 
 from flask import Flask
 
-try:
-    from cStringIO import StringIO
-except ImportError:
-    try:
-        from StringIO import StringIO
-    except ImportError:
-        from io import StringIO
+from io import BytesIO
 
 import six
 from werkzeug.wrappers import BaseRequest, BaseResponse
@@ -163,13 +157,13 @@ def make_environ(event):
     environ['SERVER_PROTOCOL'] = 'HTTP/1.1'
 
     body = event.get('body', '')
-    body = smart_text(body)
+    body = smart_text(body).encode("utf-8")
     environ['CONTENT_LENGTH'] = str(
         len(body) if body else ''
     )
 
     environ['wsgi.url_scheme'] = environ['HTTP_X_FORWARDED_PROTO']
-    environ['wsgi.input'] = StringIO(body or '')
+    environ['wsgi.input'] = BytesIO(body or u'')
     environ['wsgi.version'] = (1, 0)
     environ['wsgi.errors'] = sys.stderr
     environ['wsgi.multithread'] = False
