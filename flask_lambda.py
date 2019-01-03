@@ -156,14 +156,13 @@ def make_environ(event):
     environ['SERVER_PORT'] = environ['HTTP_X_FORWARDED_PORT']
     environ['SERVER_PROTOCOL'] = 'HTTP/1.1'
 
-    body = event.get('body', '')
-    body = smart_text(body).encode("utf-8")
+    body = (event.get('body') or '').encode('utf-8')
     environ['CONTENT_LENGTH'] = str(
         len(body) if body else ''
     )
 
     environ['wsgi.url_scheme'] = environ['HTTP_X_FORWARDED_PROTO']
-    environ['wsgi.input'] = BytesIO(body or u'')
+    environ['wsgi.input'] = BytesIO(body)
     environ['wsgi.version'] = (1, 0)
     environ['wsgi.errors'] = sys.stderr
     environ['wsgi.multithread'] = False
