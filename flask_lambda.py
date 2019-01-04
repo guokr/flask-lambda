@@ -202,7 +202,7 @@ def make_environ(event):
     environ['SERVER_PORT'] = environ['HTTP_X_FORWARDED_PORT']
     environ['SERVER_PROTOCOL'] = 'HTTP/1.1'
 
-    body = (event.get('body') or '')
+    body = event.get('body') or ''
     body = smart_bytes(body)
     environ['CONTENT_LENGTH'] = str(
         len(body) if body else ''
