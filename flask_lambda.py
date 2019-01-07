@@ -232,17 +232,17 @@ class LambdaResponse(object):
 
 
 def _call(self, event, context):
-    self.wsgi_app = HealthCheckMiddleware(self.wsgi_app)
+    self.wsgi_app_wrapped = HealthCheckMiddleware(self.wsgi_app)
 
     if 'httpMethod' not in event:
         # In this "context" `event` is `environ` and
         # `context` is `start_response`, meaning the request didn't
         # occur via API Gateway and Lambda
-        return self.wsgi_app(event, context)
+        return self.wsgi_app_wrapped(event, context)
 
     response = LambdaResponse()
 
-    body = next(self.wsgi_app(
+    body = next(self.wsgi_app_wrapped(
         make_environ(event),
         response.start_response
     ))
