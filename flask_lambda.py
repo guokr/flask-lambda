@@ -133,7 +133,7 @@ def create_wsgi_request(event_info):
     create and return a valid WSGI request environ.
     """
     method = event_info['httpMethod']
-    params = event_info['pathParameters']
+    params = event_info.get('pathParameters')
     query = event_info['queryStringParameters']  # APIGW won't allow multiple entries, ex ?id=a&id=b
     headers = event_info['headers'] or {}
 
