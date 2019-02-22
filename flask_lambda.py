@@ -22,15 +22,51 @@ except ImportError:
     from urllib.parse import urlencode
 
 from flask import Flask
+import logging
 
 import six
-
+import time
+import os
+import sys
 from werkzeug import urls
 from werkzeug.wsgi import ClosingIterator
 from werkzeug.wrappers import BaseResponse, Response
 
+__version__ = '0.0.5'
 
-__version__ = '0.0.4'
+
+def init_logger(lg):
+    lg.setLevel(logging.getLevelName(str(os.environ.get("LAMBDA_LOG_LEVEL", "INFO")).upper()))
+    console = logging.StreamHandler(sys.stdout)
+    fmt = "%(asctime)-15s %(levelname)s %(process)d %(message)s"
+    datefmt = "%Y-%m-%d %H:%M:%S"
+    formatter = logging.Formatter(fmt, datefmt)
+    console.setFormatter(formatter)
+    lg.addHandler(console)
+
+
+logger = logging.getLogger("lambda")
+init_logger(logger)
+
+
+def log_get_duration_ms(start):
+    return int((time.time() - start) * 1000)
+
+
+def log_lambda(environ, response_status, start_stamp):
+    try:
+        status_code = response_status.split(" ")[0]
+        duration = log_get_duration_ms(start_stamp)
+        logger.info("method='{}', path='{}', query='{}', remote_addr='{}' status='{}' duration={}ms".format(
+            environ["REQUEST_METHOD"],
+            environ["PATH_INFO"],
+            environ["QUERY_STRING"],
+            environ["REMOTE_ADDR"],
+            status_code,
+            duration,
+        ))
+    except Exception as e:
+        logger.error(e)
 
 
 def titlecase_keys(d):
@@ -106,8 +142,11 @@ class WSGIMiddleware(object):
             for header, new_name in zip(cookie_headers,
                                         all_casings("Set-Cookie")):
                 new_headers.append((new_name, header[1]))
-            return start_response(status, new_headers, exc_info)
+            ret = start_response(status, new_headers, exc_info)
+            log_lambda(environ, status, start_stamp)
+            return ret
 
+        start_stamp = time.time()
         # Call the application with our modifier
         response = self.application(environ, encode_response)
 
