@@ -24,6 +24,7 @@ except ImportError:
 from flask import Flask
 import logging
 
+import datetime
 import six
 import time
 import os
@@ -40,7 +41,7 @@ def init_logger(lg):
         lg.setLevel(logging.getLevelName(str(os.environ.get("LAMBDA_LOG_LEVEL", "INFO")).upper()))
         console = logging.StreamHandler(sys.stdout)
         fmt = "%(asctime)-15s %(levelname)s %(process)d %(message)s"
-        datefmt = "%Y-%m-%d %H:%M:%S"
+        datefmt = "%Y-%m-%d %H:%M:%S %z"
         formatter = logging.Formatter(fmt, datefmt)
         console.setFormatter(formatter)
         lg.addHandler(console)
@@ -60,12 +61,13 @@ def log_lambda(environ, response_status, start_stamp):
     try:
         status_code = response_status.split(" ")[0]
         duration = log_get_duration_ms(start_stamp)
-        logger.info("method='{}', path='{}', query='{}', remote_addr='{}' status='{}' duration={}ms".format(
+        logger.info("method='{}' path='{}' query='{}' remote_addr='{}' status='{}' input='{}' duration={}ms".format(
             environ["REQUEST_METHOD"],
             environ["PATH_INFO"],
             environ["QUERY_STRING"],
             environ["REMOTE_ADDR"],
             status_code,
+            datetime.datetime.fromtimestamp(start_stamp).isoformat(),
             duration,
         ))
     except Exception as e:
