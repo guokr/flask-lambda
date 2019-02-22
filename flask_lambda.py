@@ -36,13 +36,16 @@ __version__ = '0.0.5'
 
 
 def init_logger(lg):
-    lg.setLevel(logging.getLevelName(str(os.environ.get("LAMBDA_LOG_LEVEL", "INFO")).upper()))
-    console = logging.StreamHandler(sys.stdout)
-    fmt = "%(asctime)-15s %(levelname)s %(process)d %(message)s"
-    datefmt = "%Y-%m-%d %H:%M:%S"
-    formatter = logging.Formatter(fmt, datefmt)
-    console.setFormatter(formatter)
-    lg.addHandler(console)
+    try:
+        lg.setLevel(logging.getLevelName(str(os.environ.get("LAMBDA_LOG_LEVEL", "INFO")).upper()))
+        console = logging.StreamHandler(sys.stdout)
+        fmt = "%(asctime)-15s %(levelname)s %(process)d %(message)s"
+        datefmt = "%Y-%m-%d %H:%M:%S"
+        formatter = logging.Formatter(fmt, datefmt)
+        console.setFormatter(formatter)
+        lg.addHandler(console)
+    except Exception as e:
+        print(e)
 
 
 logger = logging.getLogger("lambda")
