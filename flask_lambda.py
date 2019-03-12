@@ -271,7 +271,7 @@ def _call(self, event, context):
     environ['lambda.event'] = event
 
     # Execute the application
-    with Response.from_app(self.wsgi_app, environ) as response:
+    with Response.from_app(self.wsgi_app_wrapped, environ) as response:
         # This is the object we're going to return.
         # Pack the WSGI response into our special dictionary.
         returndict = dict()
