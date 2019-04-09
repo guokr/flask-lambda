@@ -21,7 +21,7 @@ try:
 except ImportError:
     from urllib.parse import urlencode
 
-from flask import Flask
+from flask import Flask, send_from_directory
 import logging
 
 import datetime
@@ -264,10 +264,26 @@ def create_wsgi_request(event_info):
 
     return environ
 
+class SwaggerMiddleware(object):
+
+    def __init__(self, app):
+        self.app = app
+        if self.app.debug:
+            self.app.add_url_rule(
+                '/_swaggers/<path:path>', 'send_swagger', self._send_swagger)
+
+    @staticmethod
+    def _send_swagger(path):
+        base_path = os.environ.get('SWAGGER_BASE_PATH', '/app/docs/')
+        return send_from_directory(base_path, path)
+
+    def __call__(self, environ, start_response):
+        return self.app(environ, start_response)
+
 
 def _call(self, event, context):
     # This is a normal HTTP request
-    self.wsgi_app_wrapped = WSGIMiddleware(HealthCheckMiddleware(self.wsgi_app))
+    self.wsgi_app_wrapped = WSGIMiddleware(HealthCheckMiddleware(SwaggerMiddleware(self.wsgi_app)))
 
     if not event.get('httpMethod', None):
         return self.wsgi_app_wrapped(event, context)
